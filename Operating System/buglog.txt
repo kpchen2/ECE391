@@ -1,0 +1,235 @@
+Oct 12th, 2023:
+    - Had a bug where running the OS would boot-loop.
+    - Fixed by commenting out 'launch tests()' from kernel.c and implementing gdt.
+    - Took about 7 hours.
+
+Oct 14th, 2023:
+    - Fixed an issue with implementing the PIC
+    - The OS would crash and close out every time the PIC was initialized
+    - Fixed by sending 0xFF to the data port of the PIC at the end of initializing the PIC.
+    - Took about 5 hours to solve.
+
+Oct 15th, 2023:
+    - Incorrect addresses after running 'info mem'.
+    - Fixed by correcting video memory from being a page table to being a page.
+    - Took about 4 hours.
+
+Oct 15th, 2023:
+    - Ran into an issue where the OS would be continually boot looping after implementing paging
+    - Fixed by changing the page table's base addresses from 'i * ALIGN' to 'i'.
+    - Took about 4 hours.
+
+---------------------------------------------------------------------------------
+Oct 16th, 2023:
+    - Ran into some issues while implementing the CAPS lock.
+    - At first, the CAPS lock press and release was not registering.
+        - The issue was that the mapping was wrong. Fixed the scan code mapping.
+    - Weird characters appeared after turning on and typing in CAPS lock  
+        - Fixed the issue by setting a conditional that would not map scan codes that 
+        was greater than SCAN_CODE_MAP_DATA (59)
+    - Issue where the user could not leave the CAPS LOCK
+        - Fixed the issue by changing some of the logic in my conditionals.
+Overall, all of these issues took around an hour to debug.
+
+Oct 16th, 2023:
+    - Ran into some some miscallenous issues where random keys would not register
+    or would not type the right key.
+    - Fixed this issue by changing the mapping data according to the scan keys and the 
+    ASCII table.
+Overall, this issue took about 15 minutes to debug.
+
+Oct 16th, 2023:
+    - Ran into an issue when trying to implement CAPS lock and shift at the same time.
+    - The CAPS & Shift case would act the same as no special keys activated.
+    - Fixed this issue by changing some of the if logic behind implementing CAPS lock
+    and Shift. 
+    - Took about 10 minutes to solve.
+
+Oct 18th, 2023:
+    - Ran into an issue when trying to use terminal driver to print characters
+    - Random characters would appear after the expected character.
+    - Fixed it by putting up a buffer limit (1 byte to read)
+    - Took about 15 minutes to solve.
+
+Oct 19th, 2023:
+    - Ran into an issue when trying to set the RTC dividing rate.
+    - The frequency of my specified rate seemed off.
+    - Fixed it by reading through documentation and figuring out that the corresponding
+    is equal to the maximum frequency shifted right by (rate-1) rather than just shifted
+    by (rate).
+Overall, took around 3 hours to resolve.
+
+Oct 20th, 2023:
+    - Ran into issue with file system, where program page faults after trying to access
+    the starting data block address.
+    - Found by adding print statements throughout the read_data function, and seeing
+    where is the last print statement reached.
+    - Fixed by editing one variable that was incorrect (used inode length instead
+    of number of inodes).
+    - Took about 30 minutes to fix.
+
+Oct 21st, 2023
+    - Program prints random garbage characters on string when trying to read text files
+    like frame0.txt.
+    - Took a long time to debug, added print statements throughout our read_data function.
+    - The issue was solved by using memcpy to copy to our buffer instead of directly
+    editing the buffer (for loop and write to buf[i]).
+    - Most likely was because we were copying the address of what we were actually
+    supposed to put into the buffer.
+    - It took us 2-3 hours to realize the issue.
+
+Oct 21st, 2023
+    - read_file with file descriptor implementation was page faulting
+    - Took a long time to debug, added page fault location functionality to our page fault handler
+    - After seeing where the page fault was occuring in memory, I realized I was accessing a null pointer 
+    - Turns out I was trying to access a dentry pointer that wasn't set
+    - It took us 2 hours of debugging to locate and fix the issue.
+
+Oct 22nd, 2023
+    - Faced an issue where I could not see 'ELF' printing when trying to read executables
+    (file system issue).
+    - Fixed this issue after discussing with teammate who worked mostly on terminal, who
+    suggested to use an updated version of the putc function that he wrote.
+    - Overall, took about an hour to realize the issue, and was very quick to solve.
+    - Took about 30 minutes to fix.
+
+Oct 30th, 2023
+    - Had an issue where the first iret would page fault. 
+    - At first we thought it was an inline assembly issue with out stack, so we gdb'd
+    through our code and our stack was fine. 
+    - So we set a breakpoint in our linkage and noticed that the sys_write and sys_read was null
+    - We forgot to set stdin and stdout in our pcb file array
+    - This bug cost us about 5 hours.
+
+Oct 31st, 2023
+    - Had an issue where the 'ls' executable does not work, even though 'testprint' and 'hello'
+    worked.
+    - We used GDB to realize how to fix this issue. The issue was our fops table was getting
+    overwritten by the system_execute, so we made an init_fops_table() function and called that
+    from kernel.
+    - This bug cost us about 3 hours.
+
+
+Nov 1st, 2023
+    - Faced an issue where the system_execute was not recognizing the inputs properly. For example,
+    it would recognize an input of 'testpr' as 'testprint'.
+    - This was fixed by editing the read_dentry_by_name function, as it wasn't comparing strings
+    properly (we were inputting the incorrect length).
+    - This bug cost us about 1 hour.
+
+Nov 2nd, 2023
+    - Faced issue where we were page faulting when system_halt was called (it would not return back
+    to the shell like we wanted).
+    - The issue was we were trying to update the esp and ebp registers with the parent pcb, when it
+    was supposed to be updated with the current pcb, based on our design.
+    - This bug cost us about 7 hours.
+
+Nov 3rd, 2023
+    - Our sys err was failing stdin and stdout checks like not being able to system_read stdout and system_write stdin.
+    - The issue was we didn't add sufficient checks to our system read and write. 
+    - Took about 10 minutes to find and fix.
+
+Nov 3rd: 2023:
+    - Faced an issue where typing "exit" into the shell would not work as intended
+    - We noticed that after typing ls, and then typing "exit", the program would page fault.
+    - We then noted that after first booting up the shell and then just typing "exit" with no other commands, a page fault
+    would not occur.
+    - We then figured out that we were not updating current pid in system system_halt.
+    - We updated current id to equal parent pid.
+    - Took us about 15 minutes. 
+
+Nov 9th: 2023:
+    - Fixed an issue where running multiple shells would not close properly.
+    - When running more than two shells, trying to close them would cause a page fault.
+    - While using GDB, we noticed that after typing "exit" for a second time, system_halt would be repeatedly called.
+    - Our first change was to set the parent_pid of the child process in system execute, as we did not set that up
+    - In system_halt, we saw that our ss and our esp0 were being restored to the parent processes's pcb. However, in system_execute,
+    we were storing the original proceses's esp0 and ss in the child's pcb.
+    - We then set it so that the tss holds the esp0 and ss of the child's pcb.
+    - Took us about 7 hours to fix. 
+
+Nov 9th: 2023:
+    - Fixed an issue where vidmap implementation was causing page faults.
+    - When running vidmap I would get instant page faults.
+    - Turns out I had forgot to setup vidmap in page.called
+    - Simple to fix just added vidmap to our paging iteration loop
+    - Took us about 20 minutes to fix.
+
+Nov 10th: 2023:
+    - Faced an issue where fish was not displaying the correct animation
+    - We noticed that after open set fd 2 file_op_ptr to rtc functions, it got overwritten by the next open.
+    - This exposed that our system open wasn't working as intended, it overwrote all the other general use file op table ptr functions.
+    - We then figured out that since we were using the same f_ops variable and setting each fd's pointer to it's address, every subsequent open
+    - would change any fd file op ptr that had been set to the address of that variable.
+    - To fix that we just made separate f_ops tables for each type of file. 
+    - This also fixed our grep function
+    - Took us about 4 hour.
+
+---------------------------------------------------------------------------------
+Nov 24th: 2023:
+    - Faced an issue where terminal array in-use flag was getting overwritten to garbage values
+    - We noticed that our terminal read buffer that was apart of the terminal struct was overflowing and messing up the subsequent elements.
+    - This exposed that we weren't capping the nbytes of terminal read to 128 bytes in our newer implementation.
+    - We then figured to take the minimum of 128 and input nbytes as what we would use.
+    - This also fixed our flag issue and potentially prevented future issues.
+    - Took us about 2 hours to find and 20 minutes to fix.
+
+Nov 24th: 2023:
+    - Faced an issue where on opening terminal our shell page faulted looped
+    - We noted that out checks in PIT was not working as intended.
+    - We tried a bunch of differen implementations thinking that was the issue.
+    - Turns out we were setting  a variable to -1 that was initialized to -1. 
+    - To fix we set the type as int.
+    - Took 1 day to find and 5 minutes to fix.
+
+Nov 27th: 2023:
+    - For terminal switching, we originally planned on opening a base shell of a terminal only upon the first terminal switch.
+    - However, we faced a bug where 6 shells would open on the first terminal.
+    - We tried to fix the issue, but ultimately we decided to switch our design choice such that each of the 3 terminals would open a base
+    shell upon startup, after we could not fully fix the issue.
+    - Took us about 3 hours of fixing before we eventually changed our design choice.
+    
+Nov 27th, 2023:
+    - Terminal would boot loop after running a program twice.
+    - We originally had it so that the pcb would hold its parent's information (esp. ebp)
+    - Changed it so that the scheduler will handle all cases of switching tss info
+    - Changed it so that each pcb will hold its respective information
+    - After making those changes, the program would page fault after halting
+    - Was not saving parent pcb information in system execute.
+    - Made that change in logic, programs do not page fault after halting. 
+
+Nov 28th, 2023:
+    - Fixed an issue with cursor
+    - When running a program that requires a lot of time (counter, pingpong),
+    the visual cursor in other terminals would be moved to that area as well.
+    - Looking at our logic for moving cursor, we had a line where it would move the cursor using the
+    screen_x and screen_y of a terminal that was not being displayed at the moment.
+    - We got rid of that line, only making it so that visual cursor would only be moved using the screen_x and
+    screen_y of the terminal that is on screen.
+    - Took about 10 minutes to fix.
+
+Nov 30th, 2023
+    - Noticed an issue with running counter on one terminal and then fast terminal switching.
+    - Whenever we fast swapped, elements of the counter would cause the other terminals to either lose or gain garbage 
+    video output.
+    - We noticed that in counter, it solely uses terminal_write.
+    - We then decided to add a cli and sti around the for loop for the putc statement.
+    - After implementing that change, fast terminal switching with counter does not cause any unintended video memory issues.
+    - Took about 2 hours to debug.
+
+Dec 1st, 2023
+    - Noticed an issue where if ls or grep was run enough times it would boot loop or stop working.
+    - At first we couldn't narrow down what was causing the issue.
+    - During a code review we noticed in our read directory function we were using  the file position element of fd
+    - as a counter of files read unintentionally, and we weren't ever setting it back to 0.
+    - So we made a counter just for keeping track of files in directory read and made sure to set it back to 0 once read directory,
+    - hit the max number of files.
+    - Took about 5 days to find and 10 minutes to fix.
+
+Dec 3rd, 2023
+    - For some reason cat RTC did not pause like it should from the open being called.
+    - At first we couldn't figure out why our RTC open wasn't working as intended.  
+    - Once we decided to GDB we noticed RTC open was not getting called.
+    - Then we realized open was not even getting called in system_open at all, 
+    - this went unnnoticed because for files and directories their respective opens don't alter anything.
+    - Took about 1 day to find and 2 minutes to fix.
